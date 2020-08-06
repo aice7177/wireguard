@@ -168,6 +168,7 @@ ExecStop=/etc/wireguard/udp/stop.sh
 WantedBy=multi-user.target
 EOF
     chmod +x /etc/systemd/system/udp.service
+    systemctl start udp.service
     systemctl enable udp.service
     cd /etc/wireguard
     wg genkey | tee sprivatekey | wg pubkey > spublickey
