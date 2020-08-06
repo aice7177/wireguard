@@ -197,7 +197,7 @@ cat > /etc/wireguard/client/default.conf <<-EOF
 [Interface]
 PrivateKey = $C1
 PostUp = mshta vbscript:CreateObject("WScript.Shell").Run("cmd /c route add $SERVER_IP mask 255.255.255.255 192.168.1.1 METRIC 20 & start /b c:/udp/speederv2.exe -c -l127.0.0.1:2090 -r127.0.0.1:2091 -f2:4 --mode 0 --timeout 0 & start /b c:/udp/udp2raw.exe -c -r$SERVER_IP:$UDP2RAW_PORT -l127.0.0.1:2091 --raw-mode faketcp -k $UDP_PASSWORD",0)(window.close)
-PostDown = route delete $serverip && taskkill /im udp2raw.exe /f && taskkill /im speederv2.exe /f
+PostDown = route delete $SERVER_IP && taskkill /im udp2raw.exe /f && taskkill /im speederv2.exe /f
 Address = 10.77.0.2/24 
 DNS = 8.8.8.8
 MTU = 1420
