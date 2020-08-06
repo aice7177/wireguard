@@ -292,7 +292,7 @@ function menu_show(){
     clear
     echo "Please enter a correct number!"
     sleep 1s
-    start_menu
+    menu_show
     ;;
     esac
 }
