@@ -202,7 +202,7 @@ PostUp = mshta vbscript:CreateObject("WScript.Shell").Run("cmd /c route add $SER
 PostDown = route delete $SERVER_IP && taskkill /im udp2raw.exe /f && taskkill /im speederv2.exe /f
 Address = 10.77.0.2/24 
 DNS = 8.8.8.8
-MTU = 1420
+MTU = 1200
 [Peer]
 PublicKey = $S2
 Endpoint = 127.0.0.1:2090
