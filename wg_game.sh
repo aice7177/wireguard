@@ -41,6 +41,7 @@ function centos_firewalld(){
     if [ -n "$FIREWALLD_STATUS" ]; then
         echo "Firewalld is working,write wireguard & udp2raw ports to rules"
         firewall-cmd --zone=public --add-port=$WIREGUARD_PORT/udp --permanent
+        firewall-cmd --zone=public --add-masquerade --permanent
         firewall-cmd --zone=public --add-port=$UDP2RAW_PORT/udp --permanent
         firewall-cmd --zone=public --add-port=$UDP2RAW_PORT/tcp --permanent
         firewall-cmd --reload
@@ -52,6 +53,7 @@ function ufw_check(){
     if [ -n "$UFW_STATUS" ]; then
         ufw allow $WIREGUARD_PORT/udp
         ufw allow $UDP2RAW_PORT/udp
+        ufw allow $UDP2RAW_PORT/tcp
     fi
 }
 
