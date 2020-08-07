@@ -27,7 +27,7 @@ function centos_selinux(){
     if [ -f "/etc/selinux/config" ]; then
         SELINUX_STATUS=`grep SELINUX= /etc/selinux/config | grep -v "#"`
         if [ "$SELINUX_STATUS" != "SELINUX=disabled" ]; then
-            echo "SELinux is working,write wireguard & udp2raw ports to rules"
+            echo "SELinux is working, write wireguard & udp2raw ports to rules"
             yum install -y policycoreutils-python >/dev/null 2>&1
             semanage port -a -t http_port_t -p udp $WIREGUARD_PORT
             semanage port -a -t http_port_t -p udp $UDP2RAW_PORT
@@ -35,11 +35,11 @@ function centos_selinux(){
             fi
     fi
 }
-
+#Deprecated
 function centos_firewalld(){
     FIREWALLD_STATUS=`systemctl status firewalld | grep "Active: active"`
     if [ -n "$FIREWALLD_STATUS" ]; then
-        echo "Firewalld is working,write wireguard & udp2raw ports to rules"
+        echo "Firewalld is working, write wireguard & udp2raw ports to rules"
         firewall-cmd --zone=public --add-port=$WIREGUARD_PORT/udp --permanent
         firewall-cmd --zone=public --add-masquerade --permanent
         firewall-cmd --zone=public --add-port=$UDP2RAW_PORT/udp --permanent
@@ -47,7 +47,7 @@ function centos_firewalld(){
         firewall-cmd --reload
     fi
 }
-
+#Deprecated
 function ufw_check(){
     UFW_STATUS=`systemctl status ufw | grep "Active: active"`
     if [ -n "$UFW_STATUS" ]; then
@@ -66,22 +66,42 @@ function wireguard_install(){
     ETH=`ls /sys/class/net| grep ^e | head -n 1`
     if [ "$RELEASE" == "centos" ] && [ "$VERSION" == "7" ]; then
         centos_selinux
-        centos_firewalld
+        #centos_firewalld
         yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
         yum install -y "kernel-devel-uname-r == $(uname -r)" dkms wget
         curl -o /etc/yum.repos.d/jdoss-wireguard-epel-7.repo https://copr.fedorainfracloud.org/coprs/jdoss/wireguard/repo/epel-7/jdoss-wireguard-epel-7.repo
         yum install -y wireguard-dkms wireguard-tools qrencode iptables-services
+        systemctl stop firewalld
+        systemctl disable firewalld
+        systemctl enable iptables 
+        systemctl start iptables 
+        iptables -P INPUT ACCEPT
+        iptables -P OUTPUT ACCEPT
+        iptables -P FORWARD ACCEPT
+        iptables -F
+        service iptables save
+        service iptables restart
         echo 1 > /proc/sys/net/ipv4/ip_forward
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
         sysctl -p
     elif [ "$RELEASE" == "centos" ] && [ "$VERSION" == "8" ]; then
         centos_selinux
-        centos_firewalld
+        #centos_firewalld
         yum install -y epel-release
         yum install -y "kernel-devel-uname-r == $(uname -r)" dkms wget
         yum config-manager --set-enabled PowerTools
         yum copr enable -y jdoss/wireguard
-        yum install -y wireguard-dkms wireguard-tools qrencode
+        yum install -y wireguard-dkms wireguard-tools qrencode iptables-services
+        systemctl stop firewalld
+        systemctl disable firewalld
+        systemctl enable iptables 
+        systemctl start iptables 
+        iptables -P INPUT ACCEPT
+        iptables -P OUTPUT ACCEPT
+        iptables -P FORWARD ACCEPT
+        iptables -F
+        service iptables save
+        service iptables restart
         echo 1 > /proc/sys/net/ipv4/ip_forward
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
         sysctl -p
@@ -89,32 +109,40 @@ function wireguard_install(){
         echo "==================="
         echo "ubuntu19.04 does not support."
         echo "==================="
-    elif [ "$RELEASE" == "ubuntu" ]  && [ "$VERSION" == "19.10" ]; then 
+    elif [ "$RELEASE" == "ubuntu" ]  && [ "$VERSION" == "19.10" ]; then
         echo "==================="
         echo "ubuntu19.10 does not support."
         echo "==================="
     elif [ "$RELEASE" == "ubuntu" ]  && [ "$VERSION" == "16.04" ]; then
-        ufw_check
+        #ufw_check
+        systemctl stop ufw
+        systemctl disable ufw
         apt-get -y update 
         add-apt-repository -y ppa:wireguard/wireguard
         apt-get update
-        apt-get install -y wireguard qrencode wget
+        apt-get install -y wireguard qrencode wget iptables
+        systemctl enable iptables
+        systemctl start iptables
         echo 1 > /proc/sys/net/ipv4/ip_forward
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
         sysctl -p
     elif [ "$RELEASE" == "ubuntu" ] && [ "$VERSION" == "18.04" ]; then
-        ufw_check
+        #ufw_check
+        systemctl stop ufw
+        systemctl disable ufw
         apt-get -y update 
-        apt-get install -y software-properties-common wget
+        apt-get install -y software-properties-common wget iptables
         apt-get install -y openresolv
         add-apt-repository -y ppa:wireguard/wireguard
         apt-get -y update
         apt-get install -y wireguard qrencode 
+        systemctl enable iptables
+        systemctl start iptables
         echo 1 > /proc/sys/net/ipv4/ip_forward
         echo "net.ipv4.ip_forward = 1" >> /etc/sysctl.conf
         sysctl -p
     elif [ "$RELEASE" == "debian" ]; then
-        ufw_check
+        #ufw_check
         echo "deb http://deb.debian.org/debian/ unstable main" > /etc/apt/sources.list.d/unstable.list
         printf 'Package: *\nPin: release a=unstable\nPin-Priority: 90\n' > /etc/apt/preferences.d/limit-unstable
         apt update
